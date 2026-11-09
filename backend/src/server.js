@@ -37,42 +37,57 @@ const uploadRoutes = require('./routes/uploadRoutes');
 
 const app = express();
 
-// Security Middleware
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-  })
-);
-
 // Configurable CORS allowing production FRONTEND_URL and local development
 const rawFrontendUrls = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(',').map((u) => u.trim().replace(/\/$/, ''))
+  ? process.env.FRONTEND_URL.split(',').map((u) => u.trim().replace(/\/+$/, '')).filter(Boolean)
   : [];
 
-const allowedOrigins = [
+// Explicit production and development origins
+const defaultAllowedOrigins = [
+  'https://agri-direct-farmer-to-consumer.vercel.app',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'http://localhost:5174',
   'http://127.0.0.1:5174',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
-  ...rawFrontendUrls,
-].filter(Boolean);
+];
 
+const allowedOrigins = Array.from(
+  new Set([
+    ...defaultAllowedOrigins.map((u) => u.trim().replace(/\/+$/, '')),
+    ...rawFrontendUrls,
+  ])
+).filter(Boolean);
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    const cleanOrigin = origin.trim().replace(/\/+$/, '');
+    if (
+      allowedOrigins.includes(cleanOrigin) ||
+      cleanOrigin.endsWith('.vercel.app') ||
+      process.env.NODE_ENV !== 'production'
+    ) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS error: Origin ${origin} not allowed by CORS policy`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 204,
+};
+
+// CORS middleware applied first before routes and handlers
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
+// Security Middleware
 app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (mobile apps, curl, server-to-server)
-      if (!origin) return callback(null, true);
-      const cleanOrigin = origin.replace(/\/$/, '');
-      if (allowedOrigins.includes(cleanOrigin) || process.env.NODE_ENV !== 'production') {
-        return callback(null, true);
-      }
-      return callback(new Error(`CORS error: Origin ${origin} not allowed by CORS policy`));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
 );
 
