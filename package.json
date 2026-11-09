@@ -1,0 +1,25 @@
+{
+  "name": "farmer-to-consumer-marketplace",
+  "version": "1.0.0",
+  "description": "Production-Style Full-Stack Farmer-to-Consumer Agri Marketplace",
+  "scripts": {
+    "install:all": "cmd /c \"cd backend && npm install\" && cmd /c \"cd frontend && npm install\"",
+    "start:backend": "cmd /c \"cd backend && npm start\"",
+    "dev:backend": "cmd /c \"cd backend && npm run dev\"",
+    "seed:backend": "cmd /c \"cd backend && npm run seed\"",
+    "start:frontend": "cmd /c \"cd frontend && npm run dev\"",
+    "build:frontend": "cmd /c \"cd frontend && npm run build\""
+  },
+  "keywords": [
+    "agri-marketplace",
+    "farmer-to-consumer",
+    "farm-to-table",
+    "organic",
+    "react",
+    "node",
+    "express",
+    "mongodb"
+  ],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#F7F8EF] text-[#202B24] font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight text-[#174D32];
+  }
+}
+
+/* Custom Agricultural Theme Components */
+@layer components {
+  /* Primary Button with Forest Green Gradient & Soft Glowing Shadow */
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-semibold text-white 
+           bg-gradient-to-r from-[#174D32] to-[#27683E]
+           shadow-[0_4px_14px_0_rgba(23,77,50,0.39)] 
+           hover:shadow-[0_6px_20px_rgba(23,77,50,0.5)] 
+           hover:-translate-y-0.5 active:translate-y-0
+           transition-all duration-200 ease-in-out
+           disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none;
+  }
+
+  /* Secondary Button: Green border, transparent / white bg, leaf green text */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-semibold 
+           text-[#174D32] bg-white border border-[#63A66B] 
+           hover:bg-[#F0F6F2] hover:border-[#174D32]
+           transition-all duration-200 ease-in-out
+           disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  /* Harvest Gold Button: Accent action */
+  .btn-gold {
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-semibold text-[#202B24]
+           bg-gradient-to-r from-[#E5B64B] to-[#ECC772]
+           shadow-[0_4px_14px_0_rgba(229,182,75,0.4)]
+           hover:shadow-[0_6px_20px_rgba(229,182,75,0.55)]
+           hover:-translate-y-0.5 active:translate-y-0
+           transition-all duration-200 ease-in-out
+           disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  /* Danger Button */
+  .btn-danger {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-xl font-medium text-white 
+           bg-rose-600 hover:bg-rose-700 
+           shadow-sm hover:shadow 
+           transition-all duration-150;
+  }
+
+  /* Premium Card */
+  .card-premium {
+    @apply bg-white rounded-2xl border border-[#BAD5C1]/40 shadow-[0_4px_20px_-4px_rgba(23,77,50,0.06)] 
+           hover:shadow-[0_12px_28px_-6px_rgba(23,77,50,0.12)] 
+           transition-all duration-300;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F7F8EF;
+}
+::-webkit-scrollbar-thumb {
+  background: #BAD5C1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #63A66B;
+}
+
