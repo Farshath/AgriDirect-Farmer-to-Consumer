@@ -1,6 +1,18 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+// Resolve API Base URL robustly (handles root origins like https://app.onrender.com as well as /api)
+const resolveBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (!envUrl) return '/api';
+
+  const cleanUrl = envUrl.trim().replace(/\/+$/, '');
+  if (!cleanUrl.endsWith('/api')) {
+    return `${cleanUrl}/api`;
+  }
+  return cleanUrl;
+};
+
+const API_BASE_URL = resolveBaseUrl();
 
 const axiosClient = axios.create({
   baseURL: API_BASE_URL,

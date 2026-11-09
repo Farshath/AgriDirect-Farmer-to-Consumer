@@ -125,6 +125,17 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);
 
+// Resilient API aliases (prevents 404 when clients or proxies omit '/api' prefix)
+app.use('/auth', authRoutes);
+app.post('/api/register', (req, res, next) => {
+  req.url = '/register';
+  return authRoutes(req, res, next);
+});
+app.post('/register', (req, res, next) => {
+  req.url = '/register';
+  return authRoutes(req, res, next);
+});
+
 // Error handling middleware
 app.use(notFound);
 app.use(errorHandler);

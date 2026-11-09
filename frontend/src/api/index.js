@@ -4,6 +4,8 @@ import axiosClient from './axiosClient';
 export const authAPI = {
   login: (credentials) => axiosClient.post('/auth/login', credentials),
   register: (userData) => axiosClient.post('/auth/register', userData),
+  registerCustomer: (userData) => axiosClient.post('/auth/register', { ...userData, role: 'CUSTOMER' }),
+  registerFarmer: (userData) => axiosClient.post('/auth/register', { ...userData, role: 'FARMER' }),
   getMe: () => axiosClient.get('/auth/me'),
   updateProfile: (profileData) => axiosClient.put('/auth/profile', profileData),
   changePassword: (data) => axiosClient.put('/auth/change-password', data),
