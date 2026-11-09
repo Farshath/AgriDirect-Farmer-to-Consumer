@@ -37,15 +37,6 @@ const uploadRoutes = require('./routes/uploadRoutes');
 
 const app = express();
 
-// Connect to MongoDB and auto-seed if clean database
-connectDB()
-  .then(() => {
-    autoSeedIfEmpty();
-  })
-  .catch((err) => {
-    console.error(`[Fatal Database Error] ${err.message}`);
-  });
-
 // Security Middleware
 app.use(
   helmet({
@@ -53,24 +44,35 @@ app.use(
   })
 );
 
-// CORS configuration
+// Configurable CORS allowing production FRONTEND_URL and local development
+const rawFrontendUrls = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map((u) => u.trim().replace(/\/$/, ''))
+  : [];
+
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  process.env.FRONTEND_URL,
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  ...rawFrontendUrls,
 ].filter(Boolean);
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (mobile apps, curl, etc.)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(null, true); // Permissive in dev to avoid client block
+      // Allow requests with no origin (mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      const cleanOrigin = origin.replace(/\/$/, '');
+      if (allowedOrigins.includes(cleanOrigin) || process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
       }
+      return callback(new Error(`CORS error: Origin ${origin} not allowed by CORS policy`));
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   })
 );
 
@@ -127,20 +129,53 @@ app.use('/api/upload', uploadRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+// Port and Host binding for Render / Cloud deployments
+const PORT = process.env.PORT || 5050;
+const HOST = '0.0.0.0';
 
-const server = app.listen(PORT, () => {
-  console.log(`=======================================================`);
-  console.log(` AgriDirect Backend Server running in ${process.env.NODE_ENV || 'development'} mode`);
-  console.log(` Port: http://localhost:${PORT}`);
-  console.log(` Health Check: http://localhost:${PORT}/api/health`);
-  console.log(`=======================================================`);
-});
+/**
+ * Start HTTP Server only AFTER MongoDB Atlas initialization succeeds
+ */
+const startServer = async () => {
+  try {
+    // Step 1: Connect to MongoDB Atlas (Production database)
+    console.log('[Startup] Initializing database connection...');
+    await connectDB();
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error(`Unhandled Rejection Error: ${err.message}`);
-  // Keep server alive or log cleanly
-});
+    // Step 2: Auto-seed initial dataset if clean/empty database
+    await autoSeedIfEmpty();
+
+    // Step 3: Bind and start Express HTTP server on 0.0.0.0
+    const server = app.listen(PORT, HOST, () => {
+      console.log(`=======================================================`);
+      console.log(` AgriDirect Backend Server running in ${process.env.NODE_ENV || 'development'} mode`);
+      console.log(` Host: ${HOST}`);
+      console.log(` Port: ${PORT}`);
+      console.log(` Health Check: http://${HOST}:${PORT}/api/health`);
+      console.log(`=======================================================`);
+    });
+
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (err) => {
+      console.error(`[Unhandled Rejection] ${err.message}`);
+    });
+
+    // Graceful shutdown on termination signal (e.g. Render deploys)
+    process.on('SIGTERM', () => {
+      console.log('[Process] SIGTERM received. Gracefully closing HTTP server...');
+      server.close(() => {
+        console.log('[Process] Server closed cleanly.');
+        process.exit(0);
+      });
+    });
+
+    return server;
+  } catch (error) {
+    console.error(`[Fatal Startup Error] MongoDB Atlas connection failed: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 module.exports = app;
